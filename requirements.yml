@@ -1,0 +1,24 @@
+name: movie-reco-gpu
+channels:
+  - pytorch
+  - nvidia     # 提供 cudatoolkit 11.8
+  - conda-forge
+dependencies:
+  - python=3.11
+  - polars
+  - numpy
+  - scipy
+  - cudatoolkit=11.8      # Windows 支持的最高版本
+  - pytorch=2.2           # GPU 轮子
+  - fastapi
+  - uvicorn[standard]
+  - redis-py
+  - python-dotenv
+  - pytest
+  - httpx
+  - tqdm
+  - rich
+  - requests
+  - pip                   # 让 pip 补充 GPU 版 implicit
+  - pip:
+      - "implicit[cu11]==0.7.2"

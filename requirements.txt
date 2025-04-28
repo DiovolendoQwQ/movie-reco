@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard] # Includes standard dependencies like watchfiles
+polars
+redis
+scipy # Dependency for implicit
+numpy # Dependency for implicit and scipy
+implicit # The core recommendation library
+python-dotenv # Optional: If using .env file for config like REDIS_HOST
+tqdm # For progress bars in scripts

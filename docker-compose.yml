@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: movie-reco-redis
+    ports:
+      - "6379:6379" # Expose Redis port to host if needed for debugging, otherwise internal only is fine
+    volumes:
+      - redis_data:/data # Persist Redis data
+    command: redis-server --save 60 1 --loglevel warning # Basic persistence and logging
+
+  api:
+    build:
+      context: . # Build from the Dockerfile in the current directory
+      dockerfile: Dockerfile
+    container_name: movie-reco-api
+    # depends_on: # Optional: wait for redis to be healthy if needed, requires healthcheck in redis service
+    #   - redis
+    volumes:
+      # Mount processed data and models - ensure paths match Dockerfile COPY destinations if needed
+      # Dockerfile already copies these, so mounting might only be needed for development hot-reloading
+      # - ./app:/app/app # Mount app code for hot-reloading (requires --reload in CMD)
+      - ./app/models:/app/app/models # Ensure models are accessible
+    ports:
+      - "8000:8000" # Expose API port (will be proxied by Nginx)
+    environment:
+      # Pass Redis connection details to the API container
+      - REDIS_HOST=redis # Service name defined in this docker-compose file
+      - REDIS_PORT=6379
+      # - REDIS_PASSWORD=yourpassword # Add if Redis requires a password
+      # Add any other environment variables needed by the API
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # Use --reload only for dev
+    # The CMD in Dockerfile already defines the run command
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: movie-reco-nginx
+    ports:
+      - "80:80" # Expose Nginx on the standard HTTP port
+    volumes:
+      - ./web:/usr/share/nginx/html:ro # Mount the static web files (read-only)
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro # Mount custom Nginx configuration (read-only)
+    depends_on:
+      - api # Nginx needs the API service to be available for proxying
+
+volumes:
+  redis_data: # Define the named volume for Redis persistence
